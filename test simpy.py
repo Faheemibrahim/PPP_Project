@@ -3,7 +3,12 @@ A simple simulation of a community health clinic
 """
 
 import simpy
+import random
 
+
+# variables
+patient_records = [] # list to store patient records
+total_treatment_time = 0 # total treatment time
 
 # Checks if user has input a positive integer else it raises a value error 
 def get_positive_int(prompt):
@@ -45,12 +50,23 @@ def create_clinic(env, nurses):
     # Resources can be used by a limited number of processes at a time
     return simpy.Resource(env, capacity=nurses)
 
+def create_patients(env, clinic, settings):
 
-def patient(env, patient_id, clinic, settings):
-    pass
+    # range will exclude the end 
+    for patient_id in range(1, settings["patients"] + 1):
 
-# need to generate patients 
+        # allows patients to arrive at different times with the max being 10 mins after the previous person
+        arrival_gap = random.randint(1, 10)
 
+        # waits for the patient to arrive 
+        yield env.timeout(arrival_gap)
+
+        # the patient needs to be defined
+
+        
+
+#create the patient formt 
+def patient():
 
 
 
@@ -66,7 +82,8 @@ def main():
 
     # creates the clinic
     clinic = create_clinic(env,settings["nurses"])
-
+    
+    env.process(create_patients(env,clinic,settings))
 
 
 
