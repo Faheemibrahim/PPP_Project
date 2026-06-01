@@ -62,11 +62,68 @@ def create_patients(env, clinic, settings):
         yield env.timeout(arrival_gap)
 
         # the patient needs to be defined
-
-        
+        env.process(patient(env, patient_id, clinic, settings))
 
 #create the patient formt 
-def patient():
+def patient(env, patient_id, clinic, settings):
+
+    # keeping this variable global so that it can be used outside the function
+    global total_treatment_time
+
+    # patient arival time 
+    arrival_time = env.now
+
+    # calling a nurse
+    with clinic.request() as request:
+
+        # waits for a resource (nurse)
+        yield request
+
+        # patient starts treatment
+        start_time = env.now
+        
+        # patient wait time
+        wait_time = start_time - arrival_time
+
+        # patient treatment time 
+        treatment_time = random.randint(
+            settings["min_treatment"],
+            settings["max_treatment"]
+        )
+
+        # total treatment time this keeps adding for each patient 
+        total_treatment_time += treatment_time
+
+        yield env.timeout(treatment_time)
+
+        departure_time = env.now
+
+        patient_records.append({
+            "PatientID": patient_id,
+            "ArrivalTime": round(arrival_time, 2),
+            "StartTreatment": round(start_time, 2),
+            "WaitTime": round(wait_time, 2),
+            "TreatmentTime": treatment_time,
+            "DepartureTime": round(departure_time, 2)
+        })
+
+        print(
+            f"Patient {patient_id:03d} | "
+            f"Wait={wait_time:.1f} min | "
+            f"Treatment={treatment_time} min"
+        )
+
+def display_results(stats):
+    """Display simulation summary."""
+
+    print("\n===== RESULTS =====")
+
+    print(f"Patients Served: {stats['patients_served']}")
+    print(f"Average Wait Time: {stats['average_wait']:.2f} min")
+    print(f"Maximum Wait Time: {stats['maximum_wait']:.2f} min")
+    print(f"Average Treatment Time: {stats['average_treatment']:.2f} min")
+    print(f"Nurse Utilisation: {stats['utilisation']:.2f}%")
+    print(f"Clinic Operating Time: {stats['clinic_time']} min")
 
 
 
@@ -85,7 +142,7 @@ def main():
     
     env.process(create_patients(env,clinic,settings))
 
-
+    env.run()
 
 if __name__ == "__main__":
     main()
