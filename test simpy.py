@@ -4,7 +4,7 @@ A simple simulation of a community health clinic
 
 import simpy
 import random
-
+import matplotlib.pyplot as plt
 
 # variables
 patient_records = [] # list to store patient records
@@ -107,6 +107,8 @@ def patient(env, patient_id, clinic, settings):
             "DepartureTime": round(departure_time, 2)
         })
 
+        
+
         print(
             f"Patient {patient_id:03d} | "
             f"Wait={wait_time:.1f} min | "
@@ -126,13 +128,107 @@ def display_results(stats):
     print(f"Clinic Operating Time: {stats['clinic_time']} min")
 
 
+def calculate_statistics(settings):
 
+    if not patient_records:
+        return {}
+
+    # access dictionary for the patients in the list
+    wait_times = [p["WaitTime"] for p in patient_records]
+    treatment_times = [p["TreatmentTime"] for p in patient_records]
+
+    # length of the list
+    total_patients = len(patient_records)
+
+    average_wait = sum(wait_times) / total_patients
+
+    max_wait = max(wait_times)
+
+    average_treatment = sum(treatment_times) / total_patients
+
+    available_time = settings["nurses"] * settings["duration"]
+
+    # utilisation the nurses 
+    util = (
+        total_treatment_time / available_time
+    ) * 100
+
+    return {
+        "patients_served": total_patients,
+        "average_wait": average_wait,
+        "maximum_wait": max_wait,
+        "average_treatment": average_treatment,
+        "utilisation": util,
+        "clinic_time": settings["duration"]
+    }
+
+
+def wait_times(stats):
+
+    # Get patient IDs
+    patient_ids = [p["PatientID"] for p in patient_records]
+
+    # Get wait times
+    wait_times = [p["WaitTime"] for p in patient_records]
+
+    # Create figure
+    plt.figure(figsize=(8, 4))
+
+    # Plot graph
+    plt.plot(patient_ids,wait_times,marker="o")
+
+    # Labels and title
+    plt.title("Wait Time vs Patient Number")
+    plt.xlabel("Patient Number")
+    plt.ylabel("Wait Time (minutes)")
+    plt.grid(True)
+
+    # Save graph
+    plt.savefig("wait_times.png")
+
+    # Close graph
+    plt.close()
+
+    print("Saved: wait_times.png")
+
+def patients_served(stats):
+
+    # Get departure times
+    departures = sorted([p["DepartureTime"] for p in patient_records])
+
+    # Generate cumulative count
+    cumulative = list(range(1,len(departures) + 1))
+
+    # Create figure
+    plt.figure(figsize=(8, 4))
+
+    # Plot graph
+    plt.plot(
+        departures,
+        cumulative
+    )
+
+    # Labels and title
+    plt.title("Cumulative Patients Served")
+    plt.xlabel("Time (minutes)")
+    plt.ylabel("Patients Served")
+    plt.grid(True)
+
+    # Save graph
+    plt.savefig("patients_served.png")
+
+    # Close graph
+    plt.close()
+
+    print("Saved: patients_served.png")
 
 
 def main():
 
     # prompts user for setting -> more info in the get_settings function
     settings = get_settings()
+
+    print("\n==== vizualise patient wait times and treatment times ====")
 
     # creates the simulation clock 
     env = simpy.Environment()
@@ -144,6 +240,14 @@ def main():
 
     env.run()
 
+    stats = calculate_statistics(settings)
+
+    display_results(stats)
+
+    wait_times(stats)
+
+    patients_served(stats)
+
 if __name__ == "__main__":
     main()
 
@@ -151,3 +255,8 @@ if __name__ == "__main__":
 
 # Resources 
 # https://simpy.readthedocs.io/en/latest/simpy_intro/shared_resources.html
+# Processes 
+# https://simpy.readthedocs.io/en/latest/simpy_intro/process_interaction.html#waiting-for-a-process
+
+
+# make a list of what all inforamtion the patient list holds 
