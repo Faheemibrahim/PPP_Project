@@ -2,12 +2,26 @@
 
 ## Overview
 
-The Community Health Clinic Queue Simulator is a discrete-event simulation developed using SimPy. The program models patient arrivals, nurse availability, waiting queues, and treatment processes within a community health clinic.
+Community health clinics often operate with limited staffing while facing unpredictable patient demand. Hiring too few nurses may reduce operating costs, but it can also increase patient waiting times, create service bottlenecks, and reduce the overall quality of care. Conversely, employing too many nurses may improve service levels but result in underutilised resources and increased staffing costs.
 
-The simulation allows users to configure the number of nurses, number of patients, clinic operating duration, and treatment time ranges. It then simulates patient flow through the clinic and generates performance statistics and patient records.
+The Community Health Clinic Queue Simulator is a discrete-event simulation developed using SimPy to investigate these operational trade-offs. The program models patient arrivals, nurse availability, waiting queues, and treatment processes within a community health clinic.
+
+The simulation allows users to configure the number of nurses, number of patients, clinic operating duration, and treatment time ranges. It then simulates patient flow through the clinic, generates performance statistics, and produces visualisations that can be used to evaluate clinic performance and staffing decisions.
 
 ---
+## Project Structure
 
+```text
+PPP_Project/
+│
+├── README.md
+├── test simpy.py
+│
+└── outputs/
+    ├── wait_times.png
+    └── patients_served.png
+```
+---
 ## Simulation Workflow
 
 1. The user enters simulation settings.
@@ -18,8 +32,8 @@ The simulation allows users to configure the number of nurses, number of patient
 6. If no nurse is available, the patient waits in a queue.
 7. A treatment duration is generated randomly.
 8. The patient receives treatment.
-9. Treatment statistics are recorded.
-10. Results are displayed.
+9. Patient records and statistics are stored.
+10. Results and visualisations are generated.
 
 ---
 
@@ -71,39 +85,90 @@ This allows multiple patients to exist within the simulation at the same time, e
 
 ---
 
+## Performance Metrics
+
+The simulator calculates several performance metrics used to evaluate clinic efficiency and patient service levels.
+
+### Average Wait Time
+
+Measures the average amount of time patients spend waiting before treatment begins.
+
+```text
+Average Wait Time = (Sum of Patient Wait Times) / Number of Patients Served
+```
+
+### Maximum Wait Time
+
+Represents the longest waiting time experienced by any patient during the simulation.
+
+```text
+Maximum Wait Time = Maximum(Patient Wait Times)
+```
+
+### Average Treatment Time
+
+Measures the average treatment duration across all patients.
+
+```text
+Average Treatment Time = (Sum of Treatment Times) / Number of Patients Served
+```
+
+### Nurse Utilisation
+
+Measures the proportion of available nursing time spent actively treating patients.
+
+```text
+Nurse Utilisation (%) = (Total Treatment Time / Available Nurse Time) × 100
+```
+
+Where:
+
+```text
+Available Nurse Time = Number of Nurses × Simulation Completion Time
+```
+
+High utilisation values indicate that nurses are busy for most of the simulation. While this may appear efficient, excessively high utilisation can create bottlenecks that lead to long patient queues and increased waiting times.
+
+---
+
 ## Example Simulation Run
 
 ### Input Parameters
 
 ```text
-Number of nurses: 5
+Number of nurses: 1
 Number of patients: 10
-Clinic duration: 240 minutes
-Minimum treatment time: 30 minutes
-Maximum treatment time: 50 minutes
+Clinic duration: 120 minutes
+Minimum treatment time: 15 minutes
+Maximum treatment time: 30 minutes
 ```
 
-### Sample Output
+### Results
 
 ```text
-Patient 001 | Wait=0.0 min | Treatment=30 min
-Patient 002 | Wait=0.0 min | Treatment=41 min
-Patient 003 | Wait=0.0 min | Treatment=39 min
-Patient 004 | Wait=0.0 min | Treatment=49 min
-Patient 006 | Wait=2.0 min | Treatment=37 min
-Patient 005 | Wait=0.0 min | Treatment=44 min
-Patient 008 | Wait=8.0 min | Treatment=35 min
-Patient 007 | Wait=13.0 min | Treatment=41 min
-Patient 009 | Wait=15.0 min | Treatment=40 min
-Patient 010 | Wait=13.0 min | Treatment=47 min
+Patients Served: 10
+Average Wait Time: 83.70 min
+Maximum Wait Time: 155.00 min
+Average Treatment Time: 23.10 min
+Nurse Utilisation: 97.88%
 ```
 
 ### Output Analysis
 
-The first five patients received treatment immediately because five nurses were available. Therefore, Patients 001–005 experienced a waiting time of 0 minutes.
+The simulation demonstrates the impact of limited staffing on clinic performance. With only one nurse available, patient arrivals exceeded the clinic's service capacity, causing a queue to form rapidly. As the queue grew, patient waiting times increased significantly, resulting in an average wait time of 83.70 minutes and a maximum wait time of 155 minutes.
 
-When Patient 006 arrived, all nurses were occupied. As a result, Patient 006 entered the waiting queue and remained there until a nurse became available. The simulation calculated a waiting time of 2 minutes, meaning that a nurse became available two minutes after Patient 006 arrived.
+Although nurse utilisation reached 97.88%, indicating that the nurse was busy for almost the entire simulation, the high utilisation did not translate into efficient service delivery. Instead, the nurse became a bottleneck within the system, creating excessive patient delays.
 
-Patients 007–010 experienced longer waiting times because they arrived while nurses were still treating other patients. This demonstrates how limited resources create queues and increase waiting times.
+This demonstrates that minimising staffing levels to reduce operating costs can negatively affect clinic performance and patient experience. The simulation highlights the importance of balancing resource utilisation with service quality when making staffing decisions.
 
-The output order does not necessarily match the patient ID order. SimPy prints patient information when treatment is completed, not when patients arrive. Consequently, Patient 006 completed treatment before Patient 005 and was displayed first. This behaviour reflects the concurrent nature of discrete-event simulation, where multiple patient processes are active simultaneously.
+---
+
+## Visualisations
+
+The simulator generates visualisations to support performance analysis:
+
+- **Patient Wait Times Graph** – Displays the waiting time experienced by each patient.
+- **Cumulative Patients Served Graph** – Shows how many patients have been treated throughout the simulation.
+- Graphs are automatically saved to the `outputs/` directory for later review and analysis.
+
+These visualisations provide a clearer understanding of queue formation, resource utilisation, and overall clinic performance.
