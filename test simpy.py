@@ -5,6 +5,13 @@ A simple simulation of a community health clinic
 import simpy
 import random
 import matplotlib.pyplot as plt
+import os
+
+# Output directory for graphs
+OUTPUT_DIR = "outputs"
+
+# Create folder if it doesn't exist
+os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # variables
 patient_records = [] # list to store patient records
@@ -58,13 +65,18 @@ def create_patients(env, clinic, settings):
         # allows patients to arrive at different times with the max being 10 mins after the previous person
         arrival_gap = random.randint(1, 10)
 
+        #stop new patients from coming after closing and serve exisiting customers only
+        if env.now + arrival_gap > settings["duration"]:
+            print("\nClinic closed - no further new patient arrivals only processing existing customers")
+            break
+
         # waits for the patient to arrive 
         yield env.timeout(arrival_gap)
 
-        # the patient needs to be defined
+        # the patient deifined in the patient function
         env.process(patient(env, patient_id, clinic, settings))
 
-#create the patient formt 
+#create the patient definition
 def patient(env, patient_id, clinic, settings):
 
     # keeping this variable global so that it can be used outside the function
@@ -107,16 +119,18 @@ def patient(env, patient_id, clinic, settings):
             "DepartureTime": round(departure_time, 2)
         })
 
-        
 
         print(
-            f"Patient {patient_id:03d} | "
-            f"Wait={wait_time:.1f} min | "
-            f"Treatment={treatment_time} min"
+            f"Patient {patient_id:03d} completed treatment "
+            f"at clinic time {departure_time:.1f} minutes "
+            f"(Wait={wait_time:.1f} min, "
+            f"Arrival={arrival_time:.1f} min, "
+            f"Treatment={treatment_time} min)"
         )
 
+
+# displays the results
 def display_results(stats):
-    """Display simulation summary."""
 
     print("\n===== RESULTS =====")
 
@@ -146,12 +160,13 @@ def calculate_statistics(settings):
 
     average_treatment = sum(treatment_times) / total_patients
 
-    available_time = settings["nurses"] * settings["duration"]
+    actual_simulation_time = max(p["DepartureTime"] for p in patient_records)
+
+    available_time = (settings["nurses"] * actual_simulation_time)
+
 
     # utilisation the nurses 
-    util = (
-        total_treatment_time / available_time
-    ) * 100
+    util = (total_treatment_time / available_time) * 100
 
     return {
         "patients_served": total_patients,
@@ -161,7 +176,6 @@ def calculate_statistics(settings):
         "utilisation": util,
         "clinic_time": settings["duration"]
     }
-
 
 def wait_times(stats):
 
@@ -184,7 +198,7 @@ def wait_times(stats):
     plt.grid(True)
 
     # Save graph
-    plt.savefig("wait_times.png")
+    plt.savefig(os.path.join(OUTPUT_DIR,"wait_times.png"))
 
     # Close graph
     plt.close()
@@ -215,7 +229,7 @@ def patients_served(stats):
     plt.grid(True)
 
     # Save graph
-    plt.savefig("patients_served.png")
+    plt.savefig(os.path.join(OUTPUT_DIR,"patients_served.png"))
 
     # Close graph
     plt.close()
@@ -257,6 +271,11 @@ if __name__ == "__main__":
 # https://simpy.readthedocs.io/en/latest/simpy_intro/shared_resources.html
 # Processes 
 # https://simpy.readthedocs.io/en/latest/simpy_intro/process_interaction.html#waiting-for-a-process
+# MathPlot 
+# https://matplotlib.org/stable/users/explain/quick_start.html
 
 
-# make a list of what all inforamtion the patient list holds 
+
+
+
+
